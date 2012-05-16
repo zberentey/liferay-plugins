@@ -89,19 +89,26 @@
 					<%
 					List<User> users = PrivateMessagingUtil.getThreadUsers(user.getUserId(), userThread.getMbThreadId());
 
-					if (users.isEmpty()) {
-						users.add(user);
+					if (!users.isEmpty()) {
+						for (int i = 0; i < users.size(); i++) {
+							User curUser = users.get(i);
+						%>
+
+							<span class="author-sender"><%= HtmlUtil.escape(curUser.getFullName()) %></span>
+
+							<c:if test="<%= i != users.size() - 1 %>">
+								,
+							</c:if>
+
+						<%
+						}
 					}
+					else {
+						%>
 
-					for (int i = 0; i < users.size(); i++) {
-						User curUser = users.get(i);
-					%>
-
-						<span class="author-sender"><%= HtmlUtil.escape(curUser.getFullName()) %></span>
-
-						<c:if test="<%= i != users.size() - 1 %>">
-							,
-						</c:if>
+						<liferay-ui:icon-help message="deleted-user">
+							<span class="author-sender"><%= Validator.isNotNull(mbMessage.getUserName())?HtmlUtil.escape(mbMessage.getUserName()):mbMessage.getUserId() %></span>
+						</liferay-ui:icon-help>
 
 					<%
 					}
