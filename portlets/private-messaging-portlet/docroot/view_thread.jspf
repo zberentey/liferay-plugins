@@ -35,6 +35,8 @@ UserThreadLocalServiceUtil.markUserThreadAsRead(user.getUserId(), mbThreadId);
 </aui:layout>
 
 <%
+boolean hasExistingRecipients = false;
+
 String subject = HtmlUtil.escape(PrivateMessagingUtil.getThreadSubject(mbThreadId));
 %>
 
@@ -44,45 +46,50 @@ String subject = HtmlUtil.escape(PrivateMessagingUtil.getThreadSubject(mbThreadI
 	title="<%= subject %>"
 />
 
-<%
-boolean hasValidToUser = false;
-%>
-
 <aui:layout cssClass="thread-info">
 	<liferay-ui:message key="between" />
 
 	<%
 	List<User> users = PrivateMessagingUtil.getThreadUsers(user.getUserId(), mbThreadId);
-
-	if (Validator.isNotNull(users)) {
-		for (int i = 0; i < users.size(); i++) {
-			hasValidToUser = true;
-			User curUser = users.get(i);
-		%>
-
-			<c:choose>
-				<c:when test="<%= LAYOUT_USER_PUBLIC_LAYOUTS_ENABLED %>">
-					<liferay-portlet:actionURL portletName="<%= PortletKeys.MY_SITES %>" var="publicPagesURL">
-						<portlet:param name="struts_action" value="/my_sites/view" />
-						<portlet:param name="groupId" value="<%= String.valueOf(curUser.getGroup().getGroupId()) %>" />
-						<portlet:param name="privateLayout" value="<%= Boolean.FALSE.toString() %>" />
-					</liferay-portlet:actionURL>
-
-					<a class="profile-link" href="<%= publicPagesURL %>"><%= curUser.getFullName() %></a>
-				</c:when>
-				<c:otherwise>
-					<span class="profile-link"><%= curUser.getFullName() %></span>
-				</c:otherwise>
-			</c:choose>
-
-			<c:if test="<%= i != (users.size() - 1) %>">
-				,
-			</c:if>
-
-		<%
-		}
-	}
 	%>
+
+	<c:choose>
+		<c:when test="<%= (users != null) && (users.size() > 0) %>">
+
+			<%
+			for (int i = 0; i < users.size(); i++) {
+				hasExistingRecipients = true;
+				User curUser = users.get(i);
+			%>
+
+				<c:choose>
+					<c:when test="<%= LAYOUT_USER_PUBLIC_LAYOUTS_ENABLED %>">
+						<liferay-portlet:actionURL portletName="<%= PortletKeys.MY_SITES %>" var="publicPagesURL">
+							<portlet:param name="struts_action" value="/my_sites/view" />
+							<portlet:param name="groupId" value="<%= String.valueOf(curUser.getGroup().getGroupId()) %>" />
+							<portlet:param name="privateLayout" value="<%= Boolean.FALSE.toString() %>" />
+						</liferay-portlet:actionURL>
+
+						<a class="profile-link" href="<%= publicPagesURL %>"><%= curUser.getFullName() %></a>
+					</c:when>
+					<c:otherwise>
+						<span class="profile-link"><%= curUser.getFullName() %></span>
+					</c:otherwise>
+				</c:choose>
+
+				<c:if test="<%= i != (users.size() - 1) %>">
+					,
+				</c:if>
+
+			<%
+			}
+			%>
+
+		</c:when>
+		<c:otherwise>
+			<strong><liferay-ui:message key="deleted-user-s" /></strong>
+		</c:otherwise>
+	</c:choose>
 
 	<c:choose>
 		<c:when test="<%= LAYOUT_USER_PUBLIC_LAYOUTS_ENABLED %>">
@@ -129,31 +136,47 @@ boolean hasValidToUser = false;
 
 			<%
 			User curUser = null;
+			String curUserName = null;
+
 			try {
 				curUser = UserLocalServiceUtil.getUser(mbMessage.getUserId());
-			} catch (NoSuchUserException nsue) {
+
+				curUserName = HtmlUtil.escape(curUser.getFullName());
+			}
+			catch (NoSuchUserException nsue) {
+				curUserName = HtmlUtil.escape(mbMessage.getUserName());
+
+				if (Validator.isNull(curUserName)) {
+					curUserName = StringUtil.valueOf(mbMessage.getUserId());
+				}
 			}
 			%>
 
 			<div class="message">
 				<c:choose>
-					<c:when test="<%= LAYOUT_USER_PUBLIC_LAYOUTS_ENABLED && curUser!=null %>">
-						<liferay-portlet:actionURL portletName="<%= PortletKeys.MY_SITES %>" var="publicPagesURL">
-							<portlet:param name="struts_action" value="/my_sites/view" />
-							<portlet:param name="groupId" value='<%= String.valueOf(curUser.getGroup().getGroupId()) %>' />
-							<portlet:param name="privateLayout" value="<%= Boolean.FALSE.toString() %>" />
-						</liferay-portlet:actionURL>
+					<c:when test="<%= curUser != null %>">
+						<c:choose>
+							<c:when test="<%= LAYOUT_USER_PUBLIC_LAYOUTS_ENABLED %>">
+								<liferay-portlet:actionURL portletName="<%= PortletKeys.MY_SITES %>" var="publicPagesURL">
+									<portlet:param name="struts_action" value="/my_sites/view" />
+									<portlet:param name="groupId" value="<%= String.valueOf(curUser.getGroup().getGroupId()) %>" />
+									<portlet:param name="groupId" value='<%= String.valueOf(curUser.getGroup().getGroupId()) %>' />
+									<portlet:param name="privateLayout" value="<%= Boolean.FALSE.toString() %>" />
+								</liferay-portlet:actionURL>
 
-						<span class="name">
-							<a class="profile-link" href="<%= publicPagesURL %>"><%= HtmlUtil.escape(curUser.getFullName()) %></a>
-						</span>
+								<span class="name">
+									<a class="profile-link" href="<%= publicPagesURL %>"><%= curUserName %></a>
+								</span>
+							</c:when>
+							<c:otherwise>
+								<span class="name">
+									<span class="profile-link"><%= curUserName %></span>
+								</span>
+							</c:otherwise>
+						</c:choose>
 					</c:when>
 					<c:otherwise>
-						<liferay-ui:icon-help message="deleted-user">
-							<span class="name">
-								<span class="profile-link"><%= curUser!=null?HtmlUtil.escape(curUser.getFullName()):Validator.isNotNull(mbMessage.getUserName())?HtmlUtil.escape(mbMessage.getUserName()):mbMessage.getUserId() %></span>
-							</span>
-						</liferay-ui:icon-help>
+						<strong><liferay-ui:message key="deleted-user" /></strong> [<%= curUserName %>]
 					</c:otherwise>
 				</c:choose>
 
@@ -223,7 +246,7 @@ boolean hasValidToUser = false;
 	<liferay-ui:search-iterator />
 </liferay-ui:search-container>
 
-<c:if test="<%= hasValidToUser %>">
+<c:if test="<%= hasExistingRecipients %>">
 	<aui:layout cssClass="message-body-container">
 		<liferay-portlet:renderURL var="backToThreadURL" windowState="<%= WindowState.NORMAL.toString() %>"><portlet:param name="mbThreadId" value="<%= String.valueOf(mbThreadId) %>" /></liferay-portlet:renderURL>
 

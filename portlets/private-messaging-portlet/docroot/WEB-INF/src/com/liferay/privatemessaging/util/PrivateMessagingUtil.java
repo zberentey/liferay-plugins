@@ -236,7 +236,8 @@ public class PrivateMessagingUtil {
 				if (!users.contains(user)) {
 					users.add(user);
 				}
-			} catch (NoSuchUserException nsue) {
+			}
+			catch (NoSuchUserException nsue) {
 			}
 		}
 
@@ -257,7 +258,8 @@ public class PrivateMessagingUtil {
 				if (!users.contains(user)) {
 					users.add(user);
 				}
-			} catch (NoSuchUserException nsue) {
+			}
+			catch (NoSuchUserException nsue) {
 			}
 		}
 

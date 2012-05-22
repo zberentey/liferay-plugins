@@ -92,7 +92,7 @@
 					if (!users.isEmpty()) {
 						for (int i = 0; i < users.size(); i++) {
 							User curUser = users.get(i);
-						%>
+					%>
 
 							<span class="author-sender"><%= HtmlUtil.escape(curUser.getFullName()) %></span>
 
@@ -100,15 +100,18 @@
 								,
 							</c:if>
 
-						<%
+					<%
 						}
 					}
 					else {
-						%>
+						String deletedUserId = mbMessage.getUserName();
 
-						<liferay-ui:icon-help message="deleted-user">
-							<span class="author-sender"><%= Validator.isNotNull(mbMessage.getUserName())?HtmlUtil.escape(mbMessage.getUserName()):mbMessage.getUserId() %></span>
-						</liferay-ui:icon-help>
+						if (Validator.isNull(deletedUserId)) {
+							deletedUserId = StringUtil.valueOf(userId);
+						}
+					%>
+
+						<span class="author-sender"><liferay-ui:message key="deleted-user" /> [<%= deletedUserId %>]</span>
 
 					<%
 					}
