@@ -14,6 +14,7 @@
 
 package com.liferay.privatemessaging.util;
 
+import com.liferay.portal.NoSuchUserException;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.exception.SystemException;
@@ -229,10 +230,14 @@ public class PrivateMessagingUtil {
 				continue;
 			}
 
-			User user = UserLocalServiceUtil.getUser(mbMessage.getUserId());
+			try {
+				User user = UserLocalServiceUtil.getUser(mbMessage.getUserId());
 
-			if (!users.contains(user)) {
-				users.add(user);
+				if (!users.contains(user)) {
+					users.add(user);
+				}
+			}
+			catch (NoSuchUserException nsue) {
 			}
 		}
 
@@ -246,10 +251,15 @@ public class PrivateMessagingUtil {
 				continue;
 			}
 
-			User user = UserLocalServiceUtil.getUser(userThread.getUserId());
+			try {
+				User user = UserLocalServiceUtil.getUser(
+					userThread.getUserId());
 
-			if (!users.contains(user)) {
-				users.add(user);
+				if (!users.contains(user)) {
+					users.add(user);
+				}
+			}
+			catch (NoSuchUserException nsue) {
 			}
 		}
 
