@@ -134,6 +134,7 @@ public class UserThreadLocalServiceImpl extends UserThreadLocalServiceBaseImpl {
 
 		userThread.setCompanyId(user.getCompanyId());
 		userThread.setUserId(userId);
+		userThread.setUserName(user.getFullName());
 		userThread.setCreateDate(new Date());
 		userThread.setModifiedDate(new Date());
 		userThread.setMbThreadId(mbThreadId);

@@ -14,6 +14,7 @@
 
 package com.liferay.privatemessaging.util;
 
+import com.liferay.portal.NoSuchUserException;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.exception.SystemException;
@@ -23,6 +24,7 @@ import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.util.CharPool;
 import com.liferay.portal.kernel.util.DateUtil;
 import com.liferay.portal.kernel.util.StringBundler;
+import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.portal.model.Group;
 import com.liferay.portal.model.User;
@@ -229,9 +231,17 @@ public class PrivateMessagingUtil {
 				continue;
 			}
 
-			User user = UserLocalServiceUtil.getUser(mbMessage.getUserId());
+			User user = null;
 
-			if (!users.contains(user)) {
+			try {
+				user = UserLocalServiceUtil.getUser(mbMessage.getUserId());
+			} catch (NoSuchUserException nsue) {
+				user = UserLocalServiceUtil.createUser(mbMessage.getUserId());
+				user.setFirstName(mbMessage.getUserName());
+				user.setStatus(WorkflowConstants.STATUS_INACTIVE);
+			}
+
+			if (Validator.isNotNull(user) && !users.contains(user)) {
 				users.add(user);
 			}
 		}
@@ -246,9 +256,17 @@ public class PrivateMessagingUtil {
 				continue;
 			}
 
-			User user = UserLocalServiceUtil.getUser(userThread.getUserId());
+			User user = null;
 
-			if (!users.contains(user)) {
+			try {
+				user = UserLocalServiceUtil.getUser(userThread.getUserId());
+			} catch (NoSuchUserException nsue) {
+				user = UserLocalServiceUtil.createUser(userThread.getUserId());
+				user.setFirstName(userThread.getUserName());
+				user.setStatus(WorkflowConstants.STATUS_INACTIVE);
+			}
+
+			if (Validator.isNotNull(user) && !users.contains(user)) {
 				users.add(user);
 			}
 		}
