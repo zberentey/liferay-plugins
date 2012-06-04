@@ -38,6 +38,7 @@ import com.liferay.portal.kernel.search.facet.collector.FacetCollector;
 import com.liferay.portal.kernel.search.facet.config.FacetConfiguration;
 import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
+import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.StringBundler;
 import com.liferay.portal.kernel.util.StringPool;
 import com.liferay.portal.kernel.util.StringUtil;
@@ -52,6 +53,7 @@ import com.liferay.util.portlet.PortletProps;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.regex.Matcher;
@@ -212,15 +214,31 @@ public class SolrIndexSearcherImpl implements IndexSearcher {
 
 	protected String getSnippet(
 		SolrDocument solrDocument, Set<String> queryTerms,
-		Map<String, Map<String, List<String>>> highlights) {
+		Map<String, Map<String, List<String>>> highlights, Locale locale) {
 
 		if (Validator.isNull(highlights)) {
 			return StringPool.BLANK;
 		}
 
+		Locale defaultLocale = LocaleUtil.getDefault();
+
+		String defaultLanguageId = LocaleUtil.toLanguageId(defaultLocale);
+
 		String key = (String)solrDocument.getFieldValue(Field.UID);
 
-		List<String> snippets = highlights.get(key).get(Field.CONTENT);
+		String languageId = LocaleUtil.toLanguageId(locale);
+
+		List<String> snippets = null;
+
+		if (languageId.equals(defaultLanguageId)) {
+			snippets = highlights.get(key).get(Field.CONTENT);
+		}
+		else {
+			String localizedName = DocumentImpl.getLocalizedName(
+				locale, Field.CONTENT);
+
+			snippets = highlights.get(key).get(localizedName);
+		}
 
 		String snippet = StringUtil.merge(snippets, "...");
 
@@ -310,7 +328,9 @@ public class SolrIndexSearcherImpl implements IndexSearcher {
 			documents[j] = document;
 
 			if (queryConfig.isHighlightEnabled()) {
-				snippets[j] = getSnippet(solrDocument, queryTerms, highlights);
+				snippets[j] = getSnippet(
+					solrDocument, queryTerms, highlights,
+					queryConfig.getLocale());
 			}
 			else {
 				snippets[j] = StringPool.BLANK;
